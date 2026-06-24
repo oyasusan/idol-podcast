@@ -70,10 +70,10 @@ class ScriptGenerator:
     def _opening(self, date_jp: str) -> list[str]:
         return [
             line(M, f"おはようございます。ライブアイドルデイリー、{date_jp}版をお届けします。"),
-            line(R, "おはようございます。リョウです。今日もライブアイドルシーンの最新情報をまとめてお伝えします。"),
-            line(M, "本日は、前日から今朝にかけてのライブ情報、メンバー変動、解散情報をお届けします。"),
-            line(M, "情報の引用元はIDOL REPORT.com、音楽ナタリー、Google Newsです。"),
-            line(M, "それでは早速参りましょう。"),
+            line(R, "おはようございます。リョウです。よろしくお願いします。"),
+            line(M, "リョウさん、昨日から今朝にかけて、どんな動きがありましたか？"),
+            line(R, "はい。ライブ情報にメンバー変動、解散の話題まで、いろいろと動きがありました。"),
+            line(M, "それでは早速、確認していきましょう。情報の引用元はIDOL REPORT.com、Google Newsなどです。"),
         ]
 
     # ── Scene Summary ─────────────────────────────────────────────────────
@@ -83,8 +83,9 @@ class ScriptGenerator:
         if not summary:
             return []
         return [
-            line(M, "まずは、ライブアイドルシーン全体の動向からです。リョウさん、いかがでしたか？"),
+            line(M, "まず、シーン全体の動向をざっくり教えてもらえますか？"),
             line(R, summary),
+            line(M, "なるほど、幅広い動きがあったんですね。"),
         ]
 
     # ── Spotlight Topics ──────────────────────────────────────────────────
@@ -96,12 +97,7 @@ class ScriptGenerator:
         if not topics:
             return []
 
-        lines = [line(M, "続きまして、直近の注目トピックをご紹介します。リョウさん、まず1つ目は？")]
-        transitions = [
-            (line(M, "詳しく教えてください。"), line(M, "2つ目はいかがでしょう？")),
-            (line(M, "詳しく教えてください。"), line(M, "3つ目はどちらですか？")),
-            (line(M, "詳しく教えてください。"), None),
-        ]
+        result = [line(M, "続きまして、特に注目のトピックをいくつか聞かせてください。まず何がありましたか？")]
 
         for i, topic in enumerate(topics[:3]):
             group = topic.get("group", "")
@@ -109,26 +105,30 @@ class ScriptGenerator:
             detail = topic.get("detail", "")
             source = _source_label(topic.get("source", ""))
             cat_label = CATEGORY_LABELS.get(topic.get("category", ""), "")
-
-            ordinal = f"{i + 1}つ目"
             source_text = f"引用元は{source}です。" if source else ""
 
             if i == 0:
-                lines.append(line(R, f"{ordinal}は「{group}」に関する{cat_label}の情報です。{headline}"))
+                result.append(line(R, f"まず「{group}」の話題です。{cat_label}の情報で、{headline}"))
                 if detail:
-                    lines.append(transitions[i][0])
-                    lines.append(line(R, f"{detail}{source_text}"))
+                    result.append(line(M, "それはどういった内容だったんですか？"))
+                    result.append(line(R, f"{detail}{source_text}"))
+                    result.append(line(M, "なるほど、それは気になりますね。"))
+            elif i == 1:
+                result.append(line(M, "ほかにはいかがでしたか？"))
+                result.append(line(R, f"続いては「{group}」です。{headline}"))
+                if detail:
+                    result.append(line(M, "もう少し詳しく教えてもらえますか？"))
+                    result.append(line(R, f"{detail}{source_text}"))
+                    result.append(line(M, "そうなんですね。"))
             else:
-                prev_transition = transitions[i - 1][1]
-                if prev_transition:
-                    lines.append(prev_transition)
-                lines.append(line(R, f"{ordinal}は「{group}」です。{headline}"))
+                result.append(line(M, "まだありますか？"))
+                result.append(line(R, f"もう一つ、「{group}」の件です。{headline}"))
                 if detail:
-                    lines.append(transitions[i][0])
-                    lines.append(line(R, f"{detail}{source_text}"))
+                    result.append(line(M, "こちらはどういった状況ですか？"))
+                    result.append(line(R, f"{detail}{source_text}"))
 
-        lines.append(line(M, "ありがとうございます。気になる動きが続いていますね。"))
-        return lines
+        result.append(line(M, "ありがとうございます。気になる動きが続いていますね。"))
+        return result
 
     # ── Member Changes ────────────────────────────────────────────────────
 
@@ -142,12 +142,12 @@ class ScriptGenerator:
         if not changes:
             return []
 
-        lines = [
-            line(M, "続いて、直近のメンバー変動情報をまとめてお伝えします。"),
-            line(R, "すべてIDOL REPORT.comの情報をもとにお伝えします。"),
+        result = [
+            line(M, "続いて、メンバーの動きについて教えてください。"),
+            line(R, "はい。こちらは主にIDOL REPORT.comからの情報です。"),
         ]
 
-        for ch in changes[:8]:
+        for i, ch in enumerate(changes[:8]):
             group = ch.get("group", "")
             member = ch.get("member", "")
             change_type = CHANGE_TYPE_LABELS.get(ch.get("change_type", ""), ch.get("change_type", ""))
@@ -156,13 +156,18 @@ class ScriptGenerator:
 
             member_text = f"の{member}さん" if member else ""
             date_text = f"（{scheduled}付）" if scheduled else ""
+            info = f"「{group}」{member_text}が{change_type}{date_text}。{detail}"
 
-            lines.append(
-                line(R, f"「{group}」{member_text}が{change_type}{date_text}。{detail}")
-            )
+            if i == 0:
+                result.append(line(R, info))
+            elif i == 3:
+                result.append(line(M, "まだありますか？"))
+                result.append(line(R, f"はい、続きまして。{info}"))
+            else:
+                result.append(line(R, f"また、{info}"))
 
-        lines.append(line(M, "こうした情報は各グループの公式SNSでもご確認ください。"))
-        return lines
+        result.append(line(M, "いくつものグループで動きがあったんですね。各グループの公式SNSでも最新情報を確認してみてください。"))
+        return result
 
     def _extract_changes_from_news(self, news: list[dict]) -> list[dict]:
         changes = []
@@ -192,9 +197,9 @@ class ScriptGenerator:
         if not buzz_topics:
             return []
 
-        lines = [
-            line(M, "続いて、SNSやウェブ上で特に話題になっているライブアイドル関連のトピックをご紹介します。"),
-            line(R, "この日、注目を集めていた話題をピックアップしました。"),
+        result = [
+            line(M, "SNSではどんな話題が盛り上がっていましたか？"),
+            line(R, "この日、特に注目されていた話題をいくつかピックアップしました。"),
         ]
 
         for i, topic in enumerate(buzz_topics[:3]):
@@ -203,15 +208,20 @@ class ScriptGenerator:
             reason = topic.get("reason", "")
 
             if i == 0:
-                lines.append(line(R, f"まず「{topic_name}」が話題になっています。{description}"))
+                result.append(line(R, f"まず「{topic_name}」ですね。{description}"))
+                if reason:
+                    result.append(line(M, f"{reason}ということで注目されているんですね。"))
+            elif i == 1:
+                result.append(line(M, "ほかにはありますか？"))
+                result.append(line(R, f"「{topic_name}」も話題になっていました。{description}"))
+                if reason:
+                    result.append(line(M, f"なるほど、{reason}なんですね。"))
             else:
-                lines.append(line(R, f"また「{topic_name}」も注目されています。{description}"))
+                result.append(line(M, "まだありますか？"))
+                result.append(line(R, f"「{topic_name}」も挙げておきたいです。{description}"))
 
-            if reason:
-                lines.append(line(M, f"{reason}ということなんですね。"))
-
-        lines.append(line(M, "SNSの盛り上がりも気になりますね。引き続きチェックしていきましょう。"))
-        return lines
+        result.append(line(M, "アイドルシーンはSNSとも切り離せませんね。引き続きチェックしていきましょう。"))
+        return result
 
     # ── Upcoming Events ───────────────────────────────────────────────────
 
@@ -220,10 +230,10 @@ class ScriptGenerator:
         if not upcoming:
             return []
         return [
-            line(M, "最後に、今後の注目情報を教えてください。"),
+            line(M, "最後に、今後の注目情報があれば教えてください。"),
             line(R, upcoming),
-            line(M, "リョウさん、本日もありがとうございました。"),
-            line(R, "ありがとうございました。"),
+            line(M, "楽しみですね。リョウさん、本日もありがとうございました。"),
+            line(R, "ありがとうございました。皆さんも各グループの動向、ぜひチェックしてみてください。"),
         ]
 
     # ── Ending ────────────────────────────────────────────────────────────
@@ -231,9 +241,9 @@ class ScriptGenerator:
     def _ending(self, date_jp: str) -> list[str]:
         return [
             line(M, f"以上、{date_jp}のライブアイドルデイリーをお届けしました。"),
-            line(M, "情報の引用元はIDOL REPORT.com、音楽ナタリー、Google Newsです。"),
-            line(M, "各グループの最新情報は公式SNSや各メディアサイトでご確認ください。"),
-            line(M, "ライブアイドルデイリーは毎朝配信しています。購読登録もぜひどうぞ。"),
+            line(R, "情報の引用元はIDOL REPORT.com、Google Newsなどです。"),
+            line(M, "各グループの最新情報は公式SNSや各メディアサイトでもご確認ください。"),
+            line(R, "ライブアイドルデイリーは毎朝配信しています。購読登録もぜひよろしくお願いします。"),
             line(M, "本日もよい一日をお過ごしください。"),
             line(R, "それでは。"),
         ]

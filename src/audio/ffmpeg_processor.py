@@ -24,6 +24,7 @@ class FFmpegProcessor:
         self.channels = audio_cfg.get("channels", 2)
         self.normalize_loudness = audio_cfg.get("normalize_loudness", -16.0)
         self.bgm_volume_db = audio_cfg.get("bgm_volume_db", -20)
+        self.bgm_file = audio_cfg.get("bgm_file", "bgm.mp3")
         self.assets_dir = Path(assets_dir)
 
     def process(self, voice_mp3: str, output_mp3: str,
@@ -106,7 +107,7 @@ class FFmpegProcessor:
         ])
 
     def _mix_bgm(self, voice_path: str, output_path: str) -> bool:
-        bgm_path = self.assets_dir / "bgm.mp3"
+        bgm_path = self.assets_dir / self.bgm_file
         if not bgm_path.exists() or bgm_path.stat().st_size == 0:
             return False
         try:

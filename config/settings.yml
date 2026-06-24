@@ -54,6 +54,7 @@ audio:
   channels: 2
   normalize_loudness: -16.0
   bgm_volume_db: -20
+  bgm_file: "bgm_idol_report.mp3"
 
 cleanup:
   delete_raw_voice: true
