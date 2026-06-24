@@ -1,5 +1,6 @@
 .env
 *.mp3
+!docs/episodes/*.mp3
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
