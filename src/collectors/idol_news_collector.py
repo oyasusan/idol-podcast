@@ -25,6 +25,13 @@ GOOGLE_NEWS_QUERIES = [
     "地下アイドル OR ライブアイドル ライブ ワンマン",
 ]
 
+GOOGLE_NEWS_SNS_QUERIES = [
+    "地下アイドル 話題",
+    "ライブアイドル バズ 注目",
+    "地下アイドル SNS",
+    "ライブアイドル トレンド 人気",
+]
+
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (compatible; IdolPodcastBot/1.0)"
@@ -132,6 +139,31 @@ class IdolNewsCollector:
             time.sleep(1.5)
         return articles
 
+    def fetch_sns_trending(self, target_date: str) -> list[dict]:
+        """Google News RSSでSNSバズ・話題関連ニュースを取得。"""
+        articles = []
+        seen_urls: set = set()
+        for query in GOOGLE_NEWS_SNS_QUERIES:
+            url = GOOGLE_NEWS_RSS.format(query=quote(query))
+            try:
+                feed = feedparser.parse(url)
+                count = 0
+                for entry in feed.entries:
+                    article = self._parse_entry(
+                        entry, "sns_trending", "Google News", target_date
+                    )
+                    if article and article["url"] not in seen_urls:
+                        articles.append(article)
+                        seen_urls.add(article["url"])
+                        count += 1
+                        if count >= self.max_per_feed:
+                            break
+                logger.info(f"Google News SNSトレンド [{query[:20]}…]: {count}件取得")
+            except Exception as e:
+                logger.warning(f"Google News SNSトレンド取得失敗 ({query}): {e}")
+            time.sleep(1.5)
+        return articles
+
     def fetch_prtimes(self, target_date: str) -> list[dict]:
         """PR TIMESの「地下アイドル」トピックページから記事を取得。"""
         articles = []
@@ -170,6 +202,9 @@ class IdolNewsCollector:
 
         logger.info("Google News からニュース収集中...")
         all_articles.extend(self.fetch_google_news(target_date))
+
+        logger.info("Google News SNSトレンド収集中...")
+        all_articles.extend(self.fetch_sns_trending(target_date))
 
         logger.info("PR TIMES からニュース収集中...")
         all_articles.extend(self.fetch_prtimes(target_date))

@@ -57,6 +57,7 @@ class ScriptGenerator:
             self._scene_summary(analysis),
             self._spotlight_topics(analysis),
             self._member_changes(analysis, news),
+            self._sns_trending(analysis),
             self._upcoming_events(analysis),
             self._ending(date_jp),
         ]
@@ -90,6 +91,8 @@ class ScriptGenerator:
 
     def _spotlight_topics(self, analysis: dict) -> list[str]:
         topics = analysis.get("spotlight_topics", [])
+        # member_changeは_member_changesセクションで扱うため重複を除外
+        topics = [t for t in topics if t.get("category") != "member_change"]
         if not topics:
             return []
 
@@ -181,6 +184,34 @@ class ScriptGenerator:
                 "detail": title[:50],
             })
         return changes
+
+    # ── SNS Buzz Topics ───────────────────────────────────────────────────
+
+    def _sns_trending(self, analysis: dict) -> list[str]:
+        buzz_topics = analysis.get("sns_buzz_topics", [])
+        if not buzz_topics:
+            return []
+
+        lines = [
+            line(M, "続いて、SNSやウェブ上で特に話題になっているライブアイドル関連のトピックをご紹介します。"),
+            line(R, "この日、注目を集めていた話題をピックアップしました。"),
+        ]
+
+        for i, topic in enumerate(buzz_topics[:3]):
+            topic_name = topic.get("topic", "")
+            description = topic.get("description", "")
+            reason = topic.get("reason", "")
+
+            if i == 0:
+                lines.append(line(R, f"まず「{topic_name}」が話題になっています。{description}"))
+            else:
+                lines.append(line(R, f"また「{topic_name}」も注目されています。{description}"))
+
+            if reason:
+                lines.append(line(M, f"{reason}ということなんですね。"))
+
+        lines.append(line(M, "SNSの盛り上がりも気になりますね。引き続きチェックしていきましょう。"))
+        return lines
 
     # ── Upcoming Events ───────────────────────────────────────────────────
 
