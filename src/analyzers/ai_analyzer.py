@@ -206,20 +206,22 @@ class AIAnalyzer:
                 raise
         raise RuntimeError(f"全フォールバックモデル試行失敗: {last_error}")
 
+    GEMINI_MODEL = "gemini-2.0-flash"
+
     def _call_gemini(self, prompt: str) -> str:
         import google.generativeai as genai
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY が設定されていません")
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel(self.GEMINI_MODEL)
         response = model.generate_content(prompt)
-        logger.info("Gemini応答取得")
+        logger.info(f"Gemini応答取得 (model={self.GEMINI_MODEL})")
         return response.text
 
     def _get_model_name(self) -> str:
         if self.provider == "gemini":
-            return "gemini-1.5-flash"
+            return self.GEMINI_MODEL
         return getattr(self, "_used_model", os.getenv("OPENROUTER_MODEL", "openrouter-free"))
 
     def _parse_response(self, response_text: str) -> dict:
