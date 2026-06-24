@@ -1,0 +1,10 @@
+.env
+*.mp3
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+output/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

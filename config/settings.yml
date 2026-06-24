@@ -1,0 +1,61 @@
+system:
+  timezone: "Asia/Tokyo"
+  log_level: "INFO"
+  data_dir: "data"
+  output_dir: "output"
+  docs_dir: "docs"
+  assets_dir: "assets"
+
+news:
+  article_age_limit_hours: 72
+  max_articles_per_feed: 10
+  sources:
+    - name: "IDOL REPORT.com"
+      type: "rss"
+      feeds:
+        member_change: "https://idol-report.com/category/member/feed/"
+        disbandment:   "https://idol-report.com/category/%E8%A7%A3%E6%95%A3/feed/"
+        live_report:   "https://idol-report.com/category/%E3%83%A9%E3%82%A4%E3%83%96%E3%83%AC%E3%83%9D%E3%83%BC%E3%83%88/feed/"
+      enabled: true
+    - name: "Google News"
+      type: "rss"
+      queries:
+        - "地下アイドル OR ライブアイドル 解散"
+        - "地下アイドル OR ライブアイドル 脱退 卒業"
+        - "地下アイドル OR ライブアイドル ライブ ワンマン"
+      enabled: true
+    - name: "PR TIMES"
+      type: "scrape"
+      enabled: true
+
+ai:
+  max_retries: 3
+  retry_delay: 5
+  max_tokens: 4000
+  temperature: 0.3
+
+podcast:
+  category: "Music"
+  subcategory: ""
+  language: "ja"
+  explicit: false
+  max_episodes_in_rss: 7
+  max_mp3_storage_days: 7
+
+tts:
+  voice_female: "ja-JP-NanamiNeural"
+  voice_male:   "ja-JP-KeitaNeural"
+  rate: "+10%"
+  volume: "+0%"
+
+audio:
+  bitrate: "128k"
+  sample_rate: 44100
+  channels: 2
+  normalize_loudness: -16.0
+  bgm_volume_db: -20
+
+cleanup:
+  delete_raw_voice: true
+  keep_script: true
+  keep_analysis: true

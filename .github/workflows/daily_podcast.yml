@@ -1,0 +1,188 @@
+name: Daily Podcast Generation
+
+on:
+  # 毎朝7時（JST）に前日の情報でPodcast生成 → cron-job.org からのworkflow_dispatch推奨
+  # schedule:
+  #   - cron: "0 22 * * *"  # UTC 22:00 = JST 07:00
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: "対象日付 (YYYY-MM-DD)。空欄は今日"
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run（音声生成スキップ）"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "podcast-generation"
+  cancel-in-progress: false
+
+jobs:
+  generate-podcast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore SQLite database
+        uses: actions/cache@v4
+        with:
+          path: data/database.sqlite
+          key: sqlite-db-${{ github.run_number }}
+          restore-keys: |
+            sqlite-db-
+
+      - name: Set target date
+        id: set-date
+        run: |
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            echo "TARGET_DATE=${{ github.event.inputs.target_date }}" >> $GITHUB_ENV
+          else
+            # 前日の日付を対象にする
+            echo "TARGET_DATE=$(TZ='Asia/Tokyo' date -d 'yesterday' '+%Y-%m-%d')" >> $GITHUB_ENV
+          fi
+          echo "Target date: $TARGET_DATE"
+
+      - name: Run podcast generator
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'google/gemma-3-27b-it:free' }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AI_PROVIDER: ${{ vars.AI_PROVIDER || 'openrouter' }}
+          TTS_RATE: ${{ vars.TTS_RATE || '+10%' }}
+          PODCAST_BASE_URL: ${{ vars.PODCAST_BASE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+          PODCAST_TITLE: ${{ vars.PODCAST_TITLE || 'ライブアイドルデイリー' }}
+          PODCAST_AUTHOR: ${{ vars.PODCAST_AUTHOR || github.repository_owner }}
+          PODCAST_EMAIL: ${{ vars.PODCAST_EMAIL || 'noreply@github.com' }}
+          PODCAST_IMAGE_URL: ${{ vars.PODCAST_IMAGE_URL || format('https://{0}.github.io/{1}/artwork.png', github.repository_owner, github.event.repository.name) }}
+          LOG_LEVEL: INFO
+          PYTHONPATH: .
+        run: |
+          CMD="python -m src.main --date $TARGET_DATE"
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            CMD="$CMD --dry-run"
+          fi
+          echo "実行コマンド: $CMD"
+          $CMD
+
+      - name: Verify output
+        run: |
+          echo "=== 生成ファイル確認 ==="
+          ls -lh docs/episodes/ || echo "episodes/なし"
+          ls -lh docs/feed.xml  || echo "feed.xml なし"
+          ls -lh output/analysis.json || echo "analysis.json なし"
+
+      - name: Generate GitHub Pages index
+        run: |
+          python - << 'EOF'
+          import os
+          from pathlib import Path
+          from datetime import datetime, timezone, timedelta
+
+          episodes_dir = Path("docs/episodes")
+          mp3_files = sorted(episodes_dir.glob("podcast_*.mp3"), reverse=True)[:7]
+
+          base_url = os.getenv("PODCAST_BASE_URL", "https://example.github.io/idol-podcast")
+          title    = os.getenv("PODCAST_TITLE", "ライブアイドルデイリー")
+
+          episodes_html = ""
+          for mp3 in mp3_files:
+              date_str = mp3.stem.replace("podcast_", "")
+              size_mb  = round(mp3.stat().st_size / 1024 / 1024, 1)
+              episodes_html += f"""
+                <div class="episode">
+                  <h3>{date_str} のライブアイドルデイリー</h3>
+                  <audio controls preload="metadata">
+                    <source src="episodes/{mp3.name}" type="audio/mpeg">
+                  </audio>
+                  <p><a href="episodes/{mp3.name}">ダウンロード ({size_mb}MB)</a></p>
+                </div>
+          """
+
+          html = f"""<!DOCTYPE html>
+          <html lang="ja">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{title}</title>
+            <style>
+              body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }}
+              h1 {{ color: #1a1a2e; }}
+              .episode {{ background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 16px 0; }}
+              .episode h3 {{ margin-top: 0; }}
+              audio {{ width: 100%; }}
+              .rss-link {{ background: #e91e8c; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; margin: 10px 0; }}
+            </style>
+          </head>
+          <body>
+            <h1>{title}</h1>
+            <p>ライブアイドルシーンの最新情報を毎朝お届けする音声ニュースです。</p>
+            <p>ライブ情報・メンバー変動・解散情報を網羅しています。</p>
+            <p>情報引用元：IDOL REPORT.com / 音楽ナタリー / Google News</p>
+            <a href="feed.xml" class="rss-link">RSS購読</a>
+            <h2>最新エピソード</h2>
+            {episodes_html if episodes_html else '<p>エピソードを生成中...</p>'}
+            <hr>
+            <p>Generated at {datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')} JST</p>
+          </body>
+          </html>"""
+
+          Path("docs/index.html").write_text(html, encoding="utf-8")
+          print("index.html 生成完了")
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/ output/analysis.json data/database.sqlite
+          if git diff --staged --quiet; then
+            echo "変更なし - コミットスキップ"
+          else
+            git commit -m "chore: podcast update ${TARGET_DATE}
+
+          - 新エピソード追加: ${TARGET_DATE}
+          - RSS更新
+          - GitHub Pages更新
+          [skip ci]"
+            git push
+            echo "コミット・プッシュ完了"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## Podcast生成結果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 対象日付: ${TARGET_DATE}" >> $GITHUB_STEP_SUMMARY
+          if [ -f "docs/episodes/podcast_${TARGET_DATE}.mp3" ]; then
+            SIZE=$(du -sh "docs/episodes/podcast_${TARGET_DATE}.mp3" | cut -f1)
+            echo "- MP3サイズ: ${SIZE}" >> $GITHUB_STEP_SUMMARY
+            echo "- ステータス: ✅ 成功" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ステータス: ❌ MP3生成失敗" >> $GITHUB_STEP_SUMMARY
+          fi
