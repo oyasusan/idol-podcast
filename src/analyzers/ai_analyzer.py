@@ -82,34 +82,52 @@ class AIAnalyzer:
 
     def analyze(self, target_date: str, news: list[dict]) -> dict:
         prompt = self._build_prompt(target_date, news)
-        for attempt in range(self.max_retries):
-            try:
-                if self.provider == "gemini":
-                    result = self._call_gemini(prompt)
-                else:
-                    result = self._call_openrouter(prompt)
 
-                parsed = self._parse_response(result)
-                parsed["raw_prompt"] = prompt[:2000]
-                parsed["model_used"] = self._get_model_name()
+        providers = self._build_provider_order()
+        for provider_name, caller in providers:
+            for attempt in range(self.max_retries):
+                try:
+                    result = caller(prompt)
+                    parsed = self._parse_response(result)
+                    parsed["raw_prompt"] = prompt[:2000]
+                    parsed["model_used"] = self._get_model_name()
 
-                fallback = self._fallback_analysis(target_date, news)
-                for key in ("scene_summary", "upcoming_events"):
-                    if not parsed.get(key):
-                        logger.warning(f"AI が {key} を返さなかったためフォールバックで補完")
-                        parsed[key] = fallback[key]
-                if not parsed.get("trending_themes"):
-                    parsed["trending_themes"] = fallback.get("trending_themes", [])
+                    ai_fallback = self._fallback_analysis(target_date, news)
+                    for key in ("scene_summary", "upcoming_events"):
+                        if not parsed.get(key):
+                            logger.warning(f"AI が {key} を返さなかったためフォールバックで補完")
+                            parsed[key] = ai_fallback[key]
+                    if not parsed.get("trending_themes"):
+                        parsed["trending_themes"] = ai_fallback.get("trending_themes", [])
 
-                return parsed
+                    return parsed
 
-            except Exception as e:
-                logger.warning(f"AI分析失敗 (試行{attempt + 1}/{self.max_retries}): {e}")
-                if attempt < self.max_retries - 1:
-                    time.sleep(self.retry_delay * (attempt + 1))
+                except Exception as e:
+                    logger.warning(f"AI分析失敗 [{provider_name}] (試行{attempt + 1}/{self.max_retries}): {e}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(self.retry_delay * (attempt + 1))
 
-        logger.error("AI分析全試行失敗 - フォールバック分析を使用")
+            logger.warning(f"{provider_name} 全試行失敗 - 次のプロバイダーを試行")
+
+        logger.error("全プロバイダー失敗 - フォールバック分析を使用")
         return self._fallback_analysis(target_date, news)
+
+    def _build_provider_order(self) -> list:
+        """プロバイダーの試行順序を返す。設定プロバイダーを先頭に、もう一方をフォールバックに。"""
+        openrouter_caller = self._call_openrouter
+        gemini_caller = self._call_gemini
+        has_gemini = bool(os.getenv("GEMINI_API_KEY"))
+        has_openrouter = bool(os.getenv("OPENROUTER_API_KEY"))
+
+        if self.provider == "gemini":
+            order = [("Gemini", gemini_caller)]
+            if has_openrouter:
+                order.append(("OpenRouter", openrouter_caller))
+        else:
+            order = [("OpenRouter", openrouter_caller)]
+            if has_gemini:
+                order.append(("Gemini", gemini_caller))
+        return order
 
     def _build_prompt(self, target_date: str, news: list[dict]) -> str:
         live_reports   = [n for n in news if n.get("category") == "live_report"]
@@ -143,11 +161,9 @@ class AIAnalyzer:
         )
 
     OPENROUTER_FREE_MODELS = [
-        "google/gemma-3-27b-it:free",
-        "meta-llama/llama-3.1-8b-instruct:free",
-        "google/gemma-2-9b-it:free",
-        "mistralai/mistral-7b-instruct:free",
-        "deepseek/deepseek-r1:free",
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "poolside/laguna-m.1:free",
+        "poolside/laguna-xs.2:free",
     ]
 
     def _call_openrouter(self, prompt: str) -> str:
