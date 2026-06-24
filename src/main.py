@@ -31,9 +31,13 @@ def _load_settings() -> dict:
 
 
 def _get_paths(settings: dict, target_date: str) -> dict:
-    # data（DB）はSDカードのI/O制限を避けホームディレクトリに置く
-    home_data = Path.home() / ".idol-podcast"
-    data_dir     = home_data / settings.get("system", {}).get("data_dir", "data")
+    data_subdir = settings.get("system", {}).get("data_dir", "data")
+    # GitHub Actions は通常ファイルシステムを使用。ローカルのSDカードは
+    # FAT系ファイルシステムのため SQLite がクラッシュするのでホームに退避する。
+    if os.getenv("GITHUB_ACTIONS"):
+        data_dir = BASE_DIR / data_subdir
+    else:
+        data_dir = Path.home() / ".idol-podcast" / data_subdir
     output_dir   = BASE_DIR / settings.get("system", {}).get("output_dir", "output")
     docs_dir     = BASE_DIR / settings.get("system", {}).get("docs_dir", "docs")
     assets_dir   = BASE_DIR / settings.get("system", {}).get("assets_dir", "assets")
