@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:ns0="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
+  <channel>
+    <title>ライブアイドルデイリー</title>
+    <link>https://oyasusan.github.io/idol-podcast</link>
+    <description>ライブアイドルシーンの最新情報を毎朝お届けする音声ニュースです。ライブ情報・メンバー変動・解散情報を網羅しています。</description>
+    <language>ja</language>
+    <copyright>© 2026 oyasusan</copyright>
+    <lastBuildDate>Wed, 24 Jun 2026 01:40:59 +0000</lastBuildDate>
+    <generator>Idol Podcast Generator</generator>
+    <ns0:author>oyasusan</ns0:author>
+    <ns0:owner>
+      <ns0:owner>
+        <ns0:name>oyasusan</ns0:name>
+        <ns0:email>noreply@github.com</ns0:email>
+      </ns0:owner>
+    </ns0:owner>
+    <ns0:explicit>false</ns0:explicit>
+    <ns0:type>episodic</ns0:type>
+    <ns0:image href="https://oyasusan.github.io/idol-podcast/artwork.png"/>
+    <ns0:category text="Music"/>
+    <image>
+      <url>https://oyasusan.github.io/idol-podcast/artwork.png</url>
+      <title>ライブアイドルデイリー</title>
+      <link>https://oyasusan.github.io/idol-podcast</link>
+    </image>
+    <item>
+      <title>2026-06-23 ライブアイドルデイリー</title>
+      <link>https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-23.mp3</link>
+      <guid isPermaLink="false">idol-podcast-2026-06-23</guid>
+      <description>2026-06-23 ライブアイドルデイリー</description>
+      <ns0:summary>2026-06-23 ライブアイドルデイリー</ns0:summary>
+      <pubDate>Tue, 23 Jun 2026 00:00:00 -0000</pubDate>
+      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-23.mp3" length="4042390" type="audio/mpeg"/>
+      <ns0:duration>04:12</ns0:duration>
+      <ns0:explicit>false</ns0:explicit>
+      <ns0:episodeType>full</ns0:episodeType>
+    </item>
+  </channel>
+</rss>
