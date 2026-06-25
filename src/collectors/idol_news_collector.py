@@ -44,12 +44,16 @@ class IdolNewsCollector:
         self.max_age_hours = settings.get("news", {}).get("article_age_limit_hours", 48)
         self.max_per_feed = settings.get("news", {}).get("max_articles_per_feed", 10)
 
-    def _is_recent(self, published_at: str) -> bool:
+    def _is_in_window(self, published_at: str, target_date: str) -> bool:
+        """target_dateの翌日0時から max_age_hours 時間遡った範囲内かを判定する。"""
         if not published_at:
             return True
         try:
             pub = datetime.strptime(published_at[:19], "%Y-%m-%dT%H:%M:%S")
-            return datetime.now() - pub < timedelta(hours=self.max_age_hours)
+            # target_date の翌日0時を上限とし、そこから max_age_hours 時間前を下限とする
+            window_end = datetime.fromisoformat(target_date) + timedelta(days=1)
+            window_start = window_end - timedelta(hours=self.max_age_hours)
+            return window_start <= pub <= window_end
         except ValueError:
             return True
 
@@ -64,7 +68,7 @@ class IdolNewsCollector:
             dt = datetime(*entry.published_parsed[:6])
             published_at = dt.isoformat()
 
-        if not self._is_recent(published_at):
+        if not self._is_in_window(published_at, target_date):
             return None
 
         summary = BeautifulSoup(summary_raw, "html.parser").get_text()[:500]

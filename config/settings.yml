@@ -7,7 +7,7 @@ system:
   assets_dir: "assets"
 
 news:
-  article_age_limit_hours: 72
+  article_age_limit_hours: 24
   max_articles_per_feed: 10
   sources:
     - name: "IDOL REPORT.com"

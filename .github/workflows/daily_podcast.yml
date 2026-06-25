@@ -1,7 +1,7 @@
 name: Daily Podcast Generation
 
 on:
-  # 毎朝7時（JST）に前日の情報でPodcast生成 → cron-job.org からのworkflow_dispatch推奨
+  # 毎朝7時（JST）に当日版（過去24時間分）のPodcastを生成 → cron-job.org からのworkflow_dispatch推奨
   # schedule:
   #   - cron: "0 22 * * *"  # UTC 22:00 = JST 07:00
   workflow_dispatch:
@@ -63,8 +63,8 @@ jobs:
           if [ -n "${{ github.event.inputs.target_date }}" ]; then
             echo "TARGET_DATE=${{ github.event.inputs.target_date }}" >> $GITHUB_ENV
           else
-            # 前日の日付を対象にする
-            echo "TARGET_DATE=$(TZ='Asia/Tokyo' date -d 'yesterday' '+%Y-%m-%d')" >> $GITHUB_ENV
+            # 当日の日付を対象にする（内容は過去24時間分）
+            echo "TARGET_DATE=$(TZ='Asia/Tokyo' date '+%Y-%m-%d')" >> $GITHUB_ENV
           fi
           echo "Target date: $TARGET_DATE"
 
