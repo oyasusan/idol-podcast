@@ -290,11 +290,12 @@ class IdolNewsCollector:
         return articles
 
     def fetch_upcoming_live_events(self, target_date: str) -> list[dict]:
-        """liveidol.blogのライブスケジュールから、今後1週間の重要イベントを取得する。
+        """liveidol.blogのライブスケジュールから、重要イベントを取得する。
 
         「重要」の基準は、大型会場（Zepp・アリーナ・武道館など）での開催、または
         卒業・解散・ラストライブなどメンバー動向に関わるものの二種類。
         通常のライブハウス対バン（1日あたり数十件規模）はここでは拾わない。
+        当日開催分を優先し、当日に該当がなければ今後1週間分で補う。
         """
         articles = []
         try:
@@ -307,32 +308,39 @@ class IdolNewsCollector:
             schedule = json.loads(m.group(1))
 
             start = datetime.fromisoformat(target_date).date()
-            end = start + timedelta(days=6)
+            week_end = start + timedelta(days=6)
 
-            seen_keys: set = set()
-            picks = []
-            for ev in schedule:
-                try:
-                    ev_date = datetime.strptime(ev.get("event_date", ""), "%Y-%m-%d").date()
-                except ValueError:
-                    continue
-                if not (start <= ev_date <= end):
-                    continue
+            def collect(date_from, date_to) -> list:
+                seen_keys: set = set()
+                picks = []
+                for ev in schedule:
+                    try:
+                        ev_date = datetime.strptime(ev.get("event_date", ""), "%Y-%m-%d").date()
+                    except ValueError:
+                        continue
+                    if not (date_from <= ev_date <= date_to):
+                        continue
 
-                name = ev.get("event_name", "")
-                venue = ev.get("venue_name", "")
-                is_major_venue = any(v in venue for v in LIVEIDOL_MAJOR_VENUE_KEYWORDS)
-                is_member_change = any(k in name for k in LIVEIDOL_MEMBER_CHANGE_KEYWORDS)
-                if not (is_major_venue or is_member_change):
-                    continue
+                    name = ev.get("event_name", "")
+                    venue = ev.get("venue_name", "")
+                    is_major_venue = any(v in venue for v in LIVEIDOL_MAJOR_VENUE_KEYWORDS)
+                    is_member_change = any(k in name for k in LIVEIDOL_MEMBER_CHANGE_KEYWORDS)
+                    if not (is_major_venue or is_member_change):
+                        continue
 
-                key = (ev.get("event_date"), name, venue)
-                if key in seen_keys:
-                    continue
-                seen_keys.add(key)
-                picks.append((ev_date, ev))
+                    key = (ev.get("event_date"), name, venue)
+                    if key in seen_keys:
+                        continue
+                    seen_keys.add(key)
+                    picks.append((ev_date, ev))
 
-            picks.sort(key=lambda x: x[0])
+                picks.sort(key=lambda x: x[0])
+                return picks
+
+            # 当日開催分を優先。当日に該当がなければ今後1週間分で補う。
+            picks = collect(start, start)
+            if not picks:
+                picks = collect(start, week_end)
 
             for ev_date, ev in picks[:20]:
                 performers = ev.get("performers", "")
@@ -346,7 +354,7 @@ class IdolNewsCollector:
                     "summary": f"出演: {performers[:150]}" if performers else "",
                     "published_at": "",
                 })
-            logger.info(f"liveidol.blog: 今後1週間の重要ライブ {len(articles)}件取得")
+            logger.info(f"liveidol.blog: 重要ライブ {len(articles)}件取得")
         except Exception as e:
             logger.warning(f"liveidol.blog取得失敗: {e}")
         return articles

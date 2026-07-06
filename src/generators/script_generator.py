@@ -46,6 +46,10 @@ def _source_label(source: str) -> str:
     return SOURCE_LABELS.get(source, source)
 
 
+def _norm_text(s: str) -> str:
+    return "".join((s or "").split())
+
+
 class ScriptGenerator:
     def __init__(self, settings: dict):
         self.settings = settings
@@ -233,9 +237,29 @@ class ScriptGenerator:
     # ── General News Roundup ─────────────────────────────────────────────
 
     def _general_roundup(self, analysis: dict, news: list[dict]) -> list[str]:
-        """spotlight/member_changesで未使用の一般ニュースを短くまとめて紹介する。"""
+        """spotlight/member_changes/SNS話題で未使用の一般ニュースを短くまとめて紹介する。"""
         used_groups = {t.get("group") for t in analysis.get("spotlight_topics", []) if t.get("group")}
         used_groups |= {c.get("group") for c in analysis.get("member_changes", []) if c.get("group")}
+        used_groups |= {b.get("topic") for b in analysis.get("sns_buzz_topics", []) if b.get("topic")}
+
+        # 他セクションで既に触れた見出し・詳細文と重複する話題を除外するための正規化テキスト集合
+        used_texts: set = set()
+        for t in analysis.get("spotlight_topics", []):
+            for field in ("headline", "detail"):
+                if t.get(field):
+                    used_texts.add(_norm_text(t[field]))
+        for b in analysis.get("sns_buzz_topics", []):
+            if b.get("description"):
+                used_texts.add(_norm_text(b["description"]))
+        for c in analysis.get("member_changes", []):
+            if c.get("detail"):
+                used_texts.add(_norm_text(c["detail"]))
+
+        def _already_covered(title_norm: str) -> bool:
+            return any(
+                ut and (title_norm in ut or ut in title_norm)
+                for ut in used_texts
+            )
 
         seen_titles: set = set()
         picks: list[dict] = []
@@ -247,6 +271,8 @@ class ScriptGenerator:
                 continue
             group = n.get("group_name")
             if group and group in used_groups:
+                continue
+            if _already_covered(_norm_text(title)):
                 continue
             seen_titles.add(title)
             picks.append(n)
