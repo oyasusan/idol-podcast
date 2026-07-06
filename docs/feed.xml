@@ -6,7 +6,7 @@
     <description>ライブアイドルシーンの最新情報を毎朝お届けする音声ニュースです。ライブ情報・メンバー変動・解散情報を網羅しています。</description>
     <language>ja</language>
     <copyright>© 2026 oyasusan</copyright>
-    <lastBuildDate>Mon, 06 Jul 2026 02:25:42 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Jul 2026 04:31:40 +0000</lastBuildDate>
     <generator>Idol Podcast Generator</generator>
     <ns0:author>oyasusan</ns0:author>
     <ns0:owner>
@@ -31,68 +31,8 @@
       <description>2026-07-06 ライブアイドルデイリー</description>
       <ns0:summary>2026-07-06 ライブアイドルデイリー</ns0:summary>
       <pubDate>Mon, 06 Jul 2026 00:00:00 -0000</pubDate>
-      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-07-06.mp3" length="2401900" type="audio/mpeg"/>
-      <ns0:duration>02:30</ns0:duration>
-      <ns0:explicit>false</ns0:explicit>
-      <ns0:episodeType>full</ns0:episodeType>
-    </item>
-    <item>
-      <title>2026-06-28 ライブアイドルデイリー</title>
-      <link>https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-28.mp3</link>
-      <guid isPermaLink="false">idol-podcast-2026-06-28</guid>
-      <description>2026-06-28 ライブアイドルデイリー</description>
-      <ns0:summary>2026-06-28 ライブアイドルデイリー</ns0:summary>
-      <pubDate>Sun, 28 Jun 2026 00:00:00 -0000</pubDate>
-      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-28.mp3" length="2105567" type="audio/mpeg"/>
-      <ns0:duration>02:11</ns0:duration>
-      <ns0:explicit>false</ns0:explicit>
-      <ns0:episodeType>full</ns0:episodeType>
-    </item>
-    <item>
-      <title>2026-06-26 ライブアイドルデイリー</title>
-      <link>https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-26.mp3</link>
-      <guid isPermaLink="false">idol-podcast-2026-06-26</guid>
-      <description>2026-06-26 ライブアイドルデイリー</description>
-      <ns0:summary>2026-06-26 ライブアイドルデイリー</ns0:summary>
-      <pubDate>Fri, 26 Jun 2026 00:00:00 -0000</pubDate>
-      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-26.mp3" length="1997734" type="audio/mpeg"/>
-      <ns0:duration>02:04</ns0:duration>
-      <ns0:explicit>false</ns0:explicit>
-      <ns0:episodeType>full</ns0:episodeType>
-    </item>
-    <item>
-      <title>2026-06-25 ライブアイドルデイリー</title>
-      <link>https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-25.mp3</link>
-      <guid isPermaLink="false">idol-podcast-2026-06-25</guid>
-      <description>2026-06-25 ライブアイドルデイリー</description>
-      <ns0:summary>2026-06-25 ライブアイドルデイリー</ns0:summary>
-      <pubDate>Thu, 25 Jun 2026 00:00:00 -0000</pubDate>
-      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-25.mp3" length="1905782" type="audio/mpeg"/>
-      <ns0:duration>01:59</ns0:duration>
-      <ns0:explicit>false</ns0:explicit>
-      <ns0:episodeType>full</ns0:episodeType>
-    </item>
-    <item>
-      <title>2026-06-24 ライブアイドルデイリー</title>
-      <link>https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-24.mp3</link>
-      <guid isPermaLink="false">idol-podcast-2026-06-24</guid>
-      <description>2026-06-24 ライブアイドルデイリー</description>
-      <ns0:summary>2026-06-24 ライブアイドルデイリー</ns0:summary>
-      <pubDate>Wed, 24 Jun 2026 00:00:00 -0000</pubDate>
-      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-24.mp3" length="3397061" type="audio/mpeg"/>
-      <ns0:duration>03:32</ns0:duration>
-      <ns0:explicit>false</ns0:explicit>
-      <ns0:episodeType>full</ns0:episodeType>
-    </item>
-    <item>
-      <title>2026-06-23 ライブアイドルデイリー</title>
-      <link>https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-23.mp3</link>
-      <guid isPermaLink="false">idol-podcast-2026-06-23</guid>
-      <description>2026-06-23 ライブアイドルデイリー</description>
-      <ns0:summary>2026-06-23 ライブアイドルデイリー</ns0:summary>
-      <pubDate>Tue, 23 Jun 2026 00:00:00 -0000</pubDate>
-      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-06-23.mp3" length="3951693" type="audio/mpeg"/>
-      <ns0:duration>04:06</ns0:duration>
+      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-07-06.mp3" length="3965485" type="audio/mpeg"/>
+      <ns0:duration>04:07</ns0:duration>
       <ns0:explicit>false</ns0:explicit>
       <ns0:episodeType>full</ns0:episodeType>
     </item>
