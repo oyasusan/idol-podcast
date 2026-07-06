@@ -204,6 +204,19 @@ class ScriptGenerator:
 
     # ── SNS Buzz Topics ───────────────────────────────────────────────────
 
+    SNS_FOLLOWUPS = [
+        "具体的にはどんな内容だったんですか？",
+        "もう少し詳しく教えてください。",
+        "詳細も気になります。",
+        "どのあたりが盛り上がったんですか？",
+    ]
+    SNS_ACKS = [
+        "なるほど、それは盛り上がりますね。",
+        "そうなんですね、注目です。",
+        "興味深いですね。",
+        "それは話題になりますね。",
+    ]
+
     def _sns_trending(self, analysis: dict) -> list[str]:
         buzz_topics = analysis.get("sns_buzz_topics", [])
         if not buzz_topics:
@@ -220,16 +233,19 @@ class ScriptGenerator:
             reason = topic.get("reason", "")
 
             if i == 0:
-                result.append(line(R, f"まず「{topic_name}」ですね。{description}"))
+                result.append(line(R, f"まず「{topic_name}」ですね。"))
             elif i == 1:
                 result.append(line(M, "ほかにはありますか？"))
-                result.append(line(R, f"「{topic_name}」も話題になっていました。{description}"))
+                result.append(line(R, f"「{topic_name}」も話題になっていました。"))
             else:
                 result.append(line(M, "まだありますか？"))
-                result.append(line(R, f"「{topic_name}」も挙げておきたいです。{description}"))
+                result.append(line(R, f"「{topic_name}」も挙げておきたいです。"))
 
-            if reason:
-                result.append(line(M, f"{reason}ということで注目されているんですね。"))
+            if description:
+                result.append(line(M, self.SNS_FOLLOWUPS[i % len(self.SNS_FOLLOWUPS)]))
+                reason_text = f"{reason}という理由で反響を呼んでいます。" if reason else ""
+                result.append(line(R, f"{description}{reason_text}"))
+                result.append(line(M, self.SNS_ACKS[i % len(self.SNS_ACKS)]))
 
         result.append(line(M, "アイドルシーンはSNSとも切り離せませんね。引き続きチェックしていきましょう。"))
         return result
@@ -254,6 +270,8 @@ class ScriptGenerator:
         for c in analysis.get("member_changes", []):
             if c.get("detail"):
                 used_texts.add(_norm_text(c["detail"]))
+        if analysis.get("upcoming_events"):
+            used_texts.add(_norm_text(analysis["upcoming_events"]))
 
         def _already_covered(title_norm: str) -> bool:
             return any(
