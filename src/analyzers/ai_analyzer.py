@@ -113,20 +113,23 @@ class AIAnalyzer:
         return self._fallback_analysis(target_date, news)
 
     def _build_provider_order(self) -> list:
-        """プロバイダーの試行順序を返す。設定プロバイダーを先頭に、もう一方をフォールバックに。"""
-        openrouter_caller = self._call_openrouter
-        gemini_caller = self._call_gemini
-        has_gemini = bool(os.getenv("GEMINI_API_KEY"))
-        has_openrouter = bool(os.getenv("OPENROUTER_API_KEY"))
+        """プロバイダーの試行順序を返す。設定プロバイダーを先頭に、他は利用可能ならフォールバックに追加。"""
+        callers = {
+            "groq": ("Groq", self._call_groq, "GROQ_API_KEY"),
+            "gemini": ("Gemini", self._call_gemini, "GEMINI_API_KEY"),
+            "openrouter": ("OpenRouter", self._call_openrouter, "OPENROUTER_API_KEY"),
+            "grok": ("Grok", self._call_grok, "GROK_API_KEY"),
+        }
 
-        if self.provider == "gemini":
-            order = [("Gemini", gemini_caller)]
-            if has_openrouter:
-                order.append(("OpenRouter", openrouter_caller))
-        else:
-            order = [("OpenRouter", openrouter_caller)]
-            if has_gemini:
-                order.append(("Gemini", gemini_caller))
+        default_order = ("groq", "gemini", "openrouter", "grok")  # 無料 → 無料 → 無料(不安定) → 有料
+        primary = self.provider if self.provider in callers else "groq"
+        order_keys = [primary] + [k for k in default_order if k != primary]
+
+        order = []
+        for key in order_keys:
+            name, caller, env_key = callers[key]
+            if key == primary or os.getenv(env_key):
+                order.append((name, caller))
         return order
 
     def _build_prompt(self, target_date: str, news: list[dict]) -> str:
@@ -206,6 +209,52 @@ class AIAnalyzer:
                 raise
         raise RuntimeError(f"全フォールバックモデル試行失敗: {last_error}")
 
+    GROQ_MODEL = "llama-3.3-70b-versatile"
+
+    def _call_groq(self, prompt: str) -> str:
+        from openai import OpenAI
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError("GROQ_API_KEY が設定されていません")
+
+        client = OpenAI(
+            base_url="https://api.groq.com/openai/v1",
+            api_key=api_key,
+        )
+        model = os.getenv("GROQ_MODEL", self.GROQ_MODEL)
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=self.settings.get("ai", {}).get("max_tokens", 4000),
+            temperature=self.settings.get("ai", {}).get("temperature", 0.3),
+        )
+        self._used_model = model
+        logger.info(f"Groq応答取得 (model={model})")
+        return response.choices[0].message.content
+
+    GROK_MODEL = "grok-4-fast"
+
+    def _call_grok(self, prompt: str) -> str:
+        from openai import OpenAI
+        api_key = os.getenv("GROK_API_KEY")
+        if not api_key:
+            raise ValueError("GROK_API_KEY が設定されていません")
+
+        client = OpenAI(
+            base_url="https://api.x.ai/v1",
+            api_key=api_key,
+        )
+        model = os.getenv("GROK_MODEL", self.GROK_MODEL)
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=self.settings.get("ai", {}).get("max_tokens", 4000),
+            temperature=self.settings.get("ai", {}).get("temperature", 0.3),
+        )
+        self._used_model = model
+        logger.info(f"Grok応答取得 (model={model})")
+        return response.choices[0].message.content
+
     GEMINI_MODEL = "gemini-2.0-flash"
 
     def _call_gemini(self, prompt: str) -> str:
@@ -222,7 +271,13 @@ class AIAnalyzer:
     def _get_model_name(self) -> str:
         if self.provider == "gemini":
             return self.GEMINI_MODEL
-        return getattr(self, "_used_model", os.getenv("OPENROUTER_MODEL", "openrouter-free"))
+        if hasattr(self, "_used_model"):
+            return self._used_model
+        if self.provider == "groq":
+            return os.getenv("GROQ_MODEL", self.GROQ_MODEL)
+        if self.provider == "grok":
+            return os.getenv("GROK_MODEL", self.GROK_MODEL)
+        return os.getenv("OPENROUTER_MODEL", "openrouter-free")
 
     def _parse_response(self, response_text: str) -> dict:
         text = response_text.strip()

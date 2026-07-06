@@ -70,10 +70,14 @@ jobs:
 
       - name: Run podcast generator
         env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL || 'llama-3.3-70b-versatile' }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'google/gemma-3-27b-it:free' }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          AI_PROVIDER: ${{ vars.AI_PROVIDER || 'openrouter' }}
+          GROK_API_KEY: ${{ secrets.GROK_API_KEY }}
+          GROK_MODEL: ${{ vars.GROK_MODEL || 'grok-4-fast' }}
+          AI_PROVIDER: ${{ vars.AI_PROVIDER || 'groq' }}
           TTS_RATE: ${{ vars.TTS_RATE || '+10%' }}
           PODCAST_BASE_URL: ${{ vars.PODCAST_BASE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
           PODCAST_TITLE: ${{ vars.PODCAST_TITLE || 'ライブアイドルデイリー' }}
