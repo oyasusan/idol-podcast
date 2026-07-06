@@ -6,7 +6,7 @@
     <description>ライブアイドルシーンの最新情報を毎朝お届けする音声ニュースです。ライブ情報・メンバー変動・解散情報を網羅しています。</description>
     <language>ja</language>
     <copyright>© 2026 oyasusan</copyright>
-    <lastBuildDate>Mon, 06 Jul 2026 04:59:53 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Jul 2026 05:30:14 +0000</lastBuildDate>
     <generator>Idol Podcast Generator</generator>
     <ns0:author>oyasusan</ns0:author>
     <ns0:owner>
@@ -31,8 +31,8 @@
       <description>2026-07-06 ライブアイドルデイリー</description>
       <ns0:summary>2026-07-06 ライブアイドルデイリー</ns0:summary>
       <pubDate>Mon, 06 Jul 2026 00:00:00 -0000</pubDate>
-      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-07-06.mp3" length="4146880" type="audio/mpeg"/>
-      <ns0:duration>04:19</ns0:duration>
+      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-07-06.mp3" length="3621087" type="audio/mpeg"/>
+      <ns0:duration>03:46</ns0:duration>
       <ns0:explicit>false</ns0:explicit>
       <ns0:episodeType>full</ns0:episodeType>
     </item>
