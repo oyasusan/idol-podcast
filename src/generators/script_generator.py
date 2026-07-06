@@ -58,6 +58,7 @@ class ScriptGenerator:
             self._spotlight_topics(analysis),
             self._member_changes(analysis, news),
             self._sns_trending(analysis),
+            self._general_roundup(analysis, news),
             self._upcoming_events(analysis),
             self._ending(date_jp),
         ]
@@ -90,6 +91,19 @@ class ScriptGenerator:
 
     # ── Spotlight Topics ──────────────────────────────────────────────────
 
+    SPOTLIGHT_FOLLOWUPS = [
+        "それはどういった内容だったんですか？",
+        "もう少し詳しく教えてもらえますか？",
+        "こちらはどういった状況ですか？",
+        "詳細も気になります。",
+    ]
+    SPOTLIGHT_ACKS = [
+        "なるほど、それは気になりますね。",
+        "そうなんですね。",
+        "興味深いですね。",
+        "それは注目です。",
+    ]
+
     def _spotlight_topics(self, analysis: dict) -> list[str]:
         topics = analysis.get("spotlight_topics", [])
         # member_changeは_member_changesセクションで扱うため重複を除外
@@ -99,7 +113,7 @@ class ScriptGenerator:
 
         result = [line(M, "続きまして、特に注目のトピックをいくつか聞かせてください。まず何がありましたか？")]
 
-        for i, topic in enumerate(topics[:3]):
+        for i, topic in enumerate(topics[:5]):
             group = topic.get("group", "")
             headline = topic.get("headline", "")
             detail = topic.get("detail", "")
@@ -109,23 +123,17 @@ class ScriptGenerator:
 
             if i == 0:
                 result.append(line(R, f"まず「{group}」の話題です。{cat_label}の情報で、{headline}"))
-                if detail:
-                    result.append(line(M, "それはどういった内容だったんですか？"))
-                    result.append(line(R, f"{detail}{source_text}"))
-                    result.append(line(M, "なるほど、それは気になりますね。"))
             elif i == 1:
                 result.append(line(M, "ほかにはいかがでしたか？"))
                 result.append(line(R, f"続いては「{group}」です。{headline}"))
-                if detail:
-                    result.append(line(M, "もう少し詳しく教えてもらえますか？"))
-                    result.append(line(R, f"{detail}{source_text}"))
-                    result.append(line(M, "そうなんですね。"))
             else:
                 result.append(line(M, "まだありますか？"))
                 result.append(line(R, f"もう一つ、「{group}」の件です。{headline}"))
-                if detail:
-                    result.append(line(M, "こちらはどういった状況ですか？"))
-                    result.append(line(R, f"{detail}{source_text}"))
+
+            if detail:
+                result.append(line(M, self.SPOTLIGHT_FOLLOWUPS[i % len(self.SPOTLIGHT_FOLLOWUPS)]))
+                result.append(line(R, f"{detail}{source_text}"))
+                result.append(line(M, self.SPOTLIGHT_ACKS[i % len(self.SPOTLIGHT_ACKS)]))
 
         result.append(line(M, "ありがとうございます。気になる動きが続いていますね。"))
         return result
@@ -147,7 +155,7 @@ class ScriptGenerator:
             line(R, "はい。こちらは主にIDOL REPORT.comからの情報です。"),
         ]
 
-        for i, ch in enumerate(changes[:8]):
+        for i, ch in enumerate(changes[:12]):
             group = ch.get("group", "")
             member = ch.get("member", "")
             change_type = CHANGE_TYPE_LABELS.get(ch.get("change_type", ""), ch.get("change_type", ""))
@@ -202,25 +210,62 @@ class ScriptGenerator:
             line(R, "この日、特に注目されていた話題をいくつかピックアップしました。"),
         ]
 
-        for i, topic in enumerate(buzz_topics[:3]):
+        for i, topic in enumerate(buzz_topics[:4]):
             topic_name = topic.get("topic", "")
             description = topic.get("description", "")
             reason = topic.get("reason", "")
 
             if i == 0:
                 result.append(line(R, f"まず「{topic_name}」ですね。{description}"))
-                if reason:
-                    result.append(line(M, f"{reason}ということで注目されているんですね。"))
             elif i == 1:
                 result.append(line(M, "ほかにはありますか？"))
                 result.append(line(R, f"「{topic_name}」も話題になっていました。{description}"))
-                if reason:
-                    result.append(line(M, f"なるほど、{reason}なんですね。"))
             else:
                 result.append(line(M, "まだありますか？"))
                 result.append(line(R, f"「{topic_name}」も挙げておきたいです。{description}"))
 
+            if reason:
+                result.append(line(M, f"{reason}ということで注目されているんですね。"))
+
         result.append(line(M, "アイドルシーンはSNSとも切り離せませんね。引き続きチェックしていきましょう。"))
+        return result
+
+    # ── General News Roundup ─────────────────────────────────────────────
+
+    def _general_roundup(self, analysis: dict, news: list[dict]) -> list[str]:
+        """spotlight/member_changesで未使用の一般ニュースを短くまとめて紹介する。"""
+        used_groups = {t.get("group") for t in analysis.get("spotlight_topics", []) if t.get("group")}
+        used_groups |= {c.get("group") for c in analysis.get("member_changes", []) if c.get("group")}
+
+        seen_titles: set = set()
+        picks: list[dict] = []
+        for n in news:
+            if n.get("category") != "general":
+                continue
+            title = n.get("title", "")
+            if not title or title in seen_titles:
+                continue
+            group = n.get("group_name")
+            if group and group in used_groups:
+                continue
+            seen_titles.add(title)
+            picks.append(n)
+            if len(picks) >= 5:
+                break
+
+        if not picks:
+            return []
+
+        result = [
+            line(M, "このほかにも気になるニュースがあれば教えてください。"),
+            line(R, "はい、ここでいくつかまとめてご紹介しますね。"),
+        ]
+        for n in picks:
+            source = _source_label(n.get("source", ""))
+            title = n.get("title", "")
+            source_text = f"（{source}）" if source else ""
+            result.append(line(R, f"「{title}」{source_text}。"))
+        result.append(line(M, "話題は尽きませんね。引き続きチェックしていきましょう。"))
         return result
 
     # ── Upcoming Events ───────────────────────────────────────────────────

@@ -8,7 +8,7 @@ system:
 
 news:
   article_age_limit_hours: 24
-  max_articles_per_feed: 10
+  max_articles_per_feed: 20
   sources:
     - name: "IDOL REPORT.com"
       type: "rss"
@@ -23,6 +23,10 @@ news:
         - "地下アイドル OR ライブアイドル 解散"
         - "地下アイドル OR ライブアイドル 脱退 卒業"
         - "地下アイドル OR ライブアイドル ライブ ワンマン"
+        - "地下アイドル OR ライブアイドル 新曲 MV リリース"
+        - "地下アイドル OR ライブアイドル 対バン フェス 出演"
+        - "地下アイドル OR ライブアイドル 結成 デビュー 新加入"
+        - "地下アイドル OR ライブアイドル イベント 特典会"
       enabled: true
     - name: "PR TIMES"
       type: "scrape"
@@ -31,7 +35,7 @@ news:
 ai:
   max_retries: 3
   retry_delay: 5
-  max_tokens: 4000
+  max_tokens: 6000
   temperature: 0.3
 
 podcast:

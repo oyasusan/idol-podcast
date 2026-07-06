@@ -83,7 +83,7 @@ def run(target_date: str, settings: dict, dry_run: bool = False) -> bool:
     from .analyzers.ai_analyzer import AIAnalyzer
     analyzer = AIAnalyzer(settings)
 
-    fresh_news = repo.get_news_for_date(target_date, limit=60)
+    fresh_news = repo.get_news_for_date(target_date, limit=120)
     logger.info(f"分析対象ニュース: {len(fresh_news)}件")
 
     if not dry_run:
