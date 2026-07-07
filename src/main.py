@@ -76,7 +76,14 @@ def run(target_date: str, settings: dict, dry_run: bool = False) -> bool:
     from .collectors.idol_news_collector import IdolNewsCollector
     collector = IdolNewsCollector(settings)
     all_news = collector.fetch_all(target_date)
-    repo.upsert_news(all_news)
+
+    lookback_days = settings.get("news", {}).get("dedup_lookback_days", 3)
+    used_urls = repo.get_recently_used_urls(target_date, lookback_days)
+    fresh_articles = [a for a in all_news if not (a.get("url") and a["url"] in used_urls)]
+    skipped = len(all_news) - len(fresh_articles)
+    if skipped:
+        logger.info(f"直近{lookback_days}日以内に使用済みのため{skipped}件を除外")
+    repo.upsert_news(fresh_articles)
 
     # ── Step 2: AI分析 ─────────────────────────────────────────────────
     logger.info("Step 2: AI分析")
@@ -89,6 +96,7 @@ def run(target_date: str, settings: dict, dry_run: bool = False) -> bool:
     if not dry_run:
         analysis = analyzer.analyze(target_date, fresh_news)
         repo.save_analysis(target_date, analysis)
+        repo.mark_news_used(target_date)
     else:
         logger.info("Dry run: AI分析をスキップ")
         analysis = {
@@ -176,6 +184,7 @@ def run(target_date: str, settings: dict, dry_run: bool = False) -> bool:
     logger.info("Step 8: 後処理")
     _cleanup_old_mp3(
         paths["episodes_dir"],
+        target_date=target_date,
         keep_days=settings.get("podcast", {}).get("max_mp3_storage_days", 7)
     )
     if settings.get("cleanup", {}).get("delete_raw_voice", True):
@@ -188,9 +197,9 @@ def run(target_date: str, settings: dict, dry_run: bool = False) -> bool:
     return True
 
 
-def _cleanup_old_mp3(episodes_dir: str, keep_days: int = 7) -> None:
+def _cleanup_old_mp3(episodes_dir: str, target_date: str, keep_days: int = 7) -> None:
     logger = logging.getLogger("cleanup")
-    cutoff = date.today() - timedelta(days=keep_days)
+    cutoff = date.fromisoformat(target_date) - timedelta(days=keep_days)
     deleted = 0
     for mp3_file in Path(episodes_dir).glob("podcast_*.mp3"):
         date_str = mp3_file.stem.replace("podcast_", "")

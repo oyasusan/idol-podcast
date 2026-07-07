@@ -109,7 +109,7 @@ jobs:
           from datetime import datetime, timezone, timedelta
 
           episodes_dir = Path("docs/episodes")
-          mp3_files = sorted(episodes_dir.glob("podcast_*.mp3"), reverse=True)[:7]
+          mp3_files = sorted(episodes_dir.glob("podcast_*.mp3"), reverse=True)[:1]
 
           base_url = os.getenv("PODCAST_BASE_URL", "https://example.github.io/idol-podcast")
           title    = os.getenv("PODCAST_TITLE", "ライブアイドルデイリー")

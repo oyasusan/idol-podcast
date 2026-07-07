@@ -9,6 +9,7 @@ system:
 news:
   article_age_limit_hours: 24
   max_articles_per_feed: 20
+  dedup_lookback_days: 3
   sources:
     - name: "IDOL REPORT.com"
       type: "rss"
@@ -43,8 +44,8 @@ podcast:
   subcategory: ""
   language: "ja"
   explicit: false
-  max_episodes_in_rss: 7
-  max_mp3_storage_days: 7
+  max_episodes_in_rss: 1
+  max_mp3_storage_days: 0
 
 tts:
   voice_female: "ja-JP-NanamiNeural"

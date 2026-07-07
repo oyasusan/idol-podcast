@@ -57,6 +57,30 @@ class Repository:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def get_recently_used_urls(self, before_date: str, lookback_days: int) -> set:
+        """直近lookback_days日分ですでにエピソード化(used_in_episode=1)済みのURL集合を返す。
+
+        これらは翌日以降の収集結果からあらかじめ除外し、同じネタが連日
+        再登場するのを防ぐために使う。
+        """
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT DISTINCT url FROM news
+                   WHERE used_in_episode=1
+                     AND url != ''
+                     AND date >= date(?, ?)
+                     AND date < ?""",
+                (before_date, f"-{lookback_days} days", before_date)
+            ).fetchall()
+        return {r["url"] for r in rows}
+
+    def mark_news_used(self, target_date: str) -> None:
+        """指定日にAI分析へ渡したニュースをすべて使用済みとしてマークする。"""
+        with self._conn() as conn:
+            conn.execute(
+                "UPDATE news SET used_in_episode=1 WHERE date=?", (target_date,)
+            )
+
     def get_news_by_category(self, target_date: str, category: str,
                              limit: int = 20) -> list[dict]:
         with self._conn() as conn:
