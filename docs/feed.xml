@@ -6,7 +6,7 @@
     <description>ライブアイドルシーンの最新情報を毎朝お届けする音声ニュースです。ライブ情報・メンバー変動・解散情報を網羅しています。</description>
     <language>ja</language>
     <copyright>© 2026 oyasusan</copyright>
-    <lastBuildDate>Sat, 11 Jul 2026 22:15:21 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 12 Jul 2026 22:15:43 +0000</lastBuildDate>
     <generator>Idol Podcast Generator</generator>
     <ns0:author>oyasusan</ns0:author>
     <ns0:owner>
@@ -25,14 +25,14 @@
       <link>https://oyasusan.github.io/idol-podcast</link>
     </image>
     <item>
-      <title>2026-07-12 ライブアイドルデイリー</title>
-      <link>https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-07-12.mp3</link>
-      <guid isPermaLink="false">idol-podcast-2026-07-12</guid>
-      <description>2026-07-12 ライブアイドルデイリー</description>
-      <ns0:summary>2026-07-12 ライブアイドルデイリー</ns0:summary>
-      <pubDate>Sun, 12 Jul 2026 00:00:00 -0000</pubDate>
-      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-07-12.mp3" length="3984294" type="audio/mpeg"/>
-      <ns0:duration>04:08</ns0:duration>
+      <title>2026-07-13 ライブアイドルデイリー</title>
+      <link>https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-07-13.mp3</link>
+      <guid isPermaLink="false">idol-podcast-2026-07-13</guid>
+      <description>2026-07-13 ライブアイドルデイリー</description>
+      <ns0:summary>2026-07-13 ライブアイドルデイリー</ns0:summary>
+      <pubDate>Mon, 13 Jul 2026 00:00:00 -0000</pubDate>
+      <enclosure url="https://oyasusan.github.io/idol-podcast/episodes/podcast_2026-07-13.mp3" length="3598935" type="audio/mpeg"/>
+      <ns0:duration>03:44</ns0:duration>
       <ns0:explicit>false</ns0:explicit>
       <ns0:episodeType>full</ns0:episodeType>
     </item>
